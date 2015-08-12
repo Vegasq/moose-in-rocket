@@ -10,15 +10,17 @@ from kivy.graphics import Color, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import AsyncImage, Image
+from kivy.config import Config
 
 import resources
 
 
 class Block(Widget):
     y = NumericProperty(Window.height)
-    x1 = NumericProperty((Window.width/2)*-1)
+    x1 = NumericProperty((Window.width/2)*-1 - 200)
     x2 = NumericProperty((Window.width/2)+200)
     shake_step = 5
+    drop_speed = 5
 
     def __init__(self, **kwargs):
         super(Block, self).__init__(**kwargs)
@@ -27,22 +29,26 @@ class Block(Widget):
         with self.canvas:
             Color(1, 0, 0, 1)  # set the colour to red
             self.rectA = Rectangle(pos=(self.x1, self.height),
-                                  size=(Window.width,
+                                   size=(Window.width,
                                         100))
             Color(1, 0, 0, 1)  # set the colour to red
             self.rectB = Rectangle(pos=(self.x2, self.height),
-                                  size=(Window.width,
+                                   size=(Window.width,
                                         100))
+        self.size = (Window.width, Window.height)
 
     def shake(self):
-        if self.x2 > (Window.width / 2 + 300) or self.x2 < (Window.width / 2 - 200):
+        if self.x2 > (Window.width / 2 + 600) or self.x2 < (Window.width / 2 - 300):
             self.shake_step *= -1
+            if self.shake_step > 0:
+                self.shake_step += 2
+            self.drop_speed += 1
 
         self.x1 += self.shake_step
         self.x2 += self.shake_step
 
     def move(self):
-        self.y -= 5
+        self.y -= self.drop_speed
         self.shake()
         self.rectA.pos = (self.x1, self.y)
         self.rectB.pos = (self.x2, self.y)
@@ -52,15 +58,22 @@ class Block(Widget):
 
 
 class Background(Widget):
-    default_y = 120
-    y = NumericProperty(120)
-    x = NumericProperty(120)
-    force = BooleanProperty(False)
+    y = NumericProperty(0)
+    x = NumericProperty(0)
+
+    def __init__(self, **kwargs):
+        super(Background, self).__init__(**kwargs)
+        self._requested_size = kwargs['size']
+
+        with self.canvas:
+            self.image = Rectangle(pos=kwargs['pos'],
+                                   size=kwargs['size'],
+                                   source=resources.background)
 
     def move(self):
-        if (self.y * -1) >= self.height:
-            self.y = self.height
-        self.y -= 7
+        if (self.image.pos[1] * -1) >= self._requested_size[1]:
+            self.image.pos = (self.image.pos[0], 1024*2)
+        self.image.pos = (self.image.pos[0], self.image.pos[1] - 8)
 
 
 class Enemies(object):
@@ -94,33 +107,42 @@ class Rocket(Widget):
         self.x = Window.width/2 - self.size[0]/2
 
         with self.canvas:
-            self.image = Image(pos=(self.x, self.y),
-                               source=resources.rocket,
-                               size=(152, 261)
-                               )
+            self.image = Rectangle(pos=(self.x, self.y),
+                                   source=resources.rocket,)
+            self.image.size = self.image.texture.size
+        self.size = self.image.size
+        self.pos = self.image.pos
 
     def move(self):
         if self.force:
-            if self.image.y < (Window.height - self.default_y - 150):
-                self.image.y += 10
-        elif self.image.y > self.default_y:
-            self.image.y -= 10
-            if self.image.y < self.default_y:
-                self.image.y = self.default_y
+            if self.image.pos[1] < (Window.height - self.default_y - 150):
+                self.image.pos = (self.image.pos[0], self.image.pos[1] + 10)
+                self.pos = (self.image.pos[0], self.image.pos[1] + 10)
+        elif self.image.pos[1] > self.default_y:
+            self.image.pos = (self.image.pos[0], self.image.pos[1] - 10)
+            self.pos = (self.image.pos[0], self.image.pos[1] - 10)
+            if self.image.pos[1] < self.default_y:
+                self.image.pos = (self.image.pos[0], self.default_y)
+                self.pos = (self.image.pos[0], self.default_y)
 
 
-class RocketGame(Widget):
+class MooseInRocketGame(Widget):
     rocket = ObjectProperty(None)
     backgroundA = ObjectProperty(None)
     backgroundB = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        super(RocketGame, self).__init__(**kwargs)
+        super(MooseInRocketGame, self).__init__(**kwargs)
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self._keyboard.bind(on_key_up=self._on_keyboard_up)
 
+        # self.rocket = Rocket()
         self.enemies_factory = Enemies()
+        with self.canvas:
+            self.backgroundA = Background(size=(768*2, 1024*2,), pos=(0, 0))
+            self.backgroundB = Background(size=(768*2, 1024*2,), pos=(0, 1024*2))
+            self.rocket = Rocket()
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -130,11 +152,16 @@ class RocketGame(Widget):
         with self.canvas:
             self.enemies_factory.generate()
 
-        for enemie in self.enemies_factory.enemies:
-            enemie.move()
-        self.rocket.move()
         self.backgroundA.move()
         self.backgroundB.move()
+        self.rocket.move()
+        for enemie in self.enemies_factory.enemies:
+            enemie.move()
+            if self.rocket.collide_widget(enemie):
+                print('die')
+            else:
+                print('~')
+
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         self.rocket.force = True
@@ -143,12 +170,22 @@ class RocketGame(Widget):
         self.rocket.force = False
 
 
-class RocketApp(App):
+class MooseInRocketApp(App):
     def build(self):
-        game = RocketGame()
+
+        # Window.size = (1024, 768)
+        #
+        # def resize(w, h):
+        #     if w == 768 and h == 1024:
+        #         return
+        #     Window.size = (768, 1024)
+        #
+        # Window.on_resize = resize
+
+        game = MooseInRocketGame()
 
         Clock.schedule_interval(game.update, 1.0 / 60.0)
         return game
 
 if __name__ == '__main__':
-    RocketApp().run()
+    MooseInRocketApp().run()
