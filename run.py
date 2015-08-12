@@ -11,6 +11,8 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import AsyncImage, Image
 
+import resources
+
 
 class Block(Widget):
     y = NumericProperty(Window.height)
@@ -84,17 +86,27 @@ class Enemies(object):
 class Rocket(Widget):
     default_y = 120
     y = NumericProperty(120)
-    x = NumericProperty(120)
+    x = NumericProperty(Window.width/2)
     force = BooleanProperty(False)
+
+    def __init__(self, **kwargs):
+        super(Rocket, self).__init__(**kwargs)
+        self.x = Window.width/2 - self.size[0]/2
+
+        with self.canvas:
+            self.image = Image(pos=(self.x, self.y),
+                               source=resources.rocket,
+                               size=(152, 261)
+                               )
 
     def move(self):
         if self.force:
-            if self.y < (Window.height - self.default_y - 150):
-                self.y += 10
-        elif self.y > self.default_y:
-            self.y -= 10
-            if self.y < self.default_y:
-                self.y = self.default_y
+            if self.image.y < (Window.height - self.default_y - 150):
+                self.image.y += 10
+        elif self.image.y > self.default_y:
+            self.image.y -= 10
+            if self.image.y < self.default_y:
+                self.image.y = self.default_y
 
 
 class RocketGame(Widget):
