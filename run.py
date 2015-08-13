@@ -18,7 +18,7 @@ import resources
 class Block(Widget):
     y = NumericProperty(Window.height)
     x1 = NumericProperty((Window.width/2)*-1 - 200)
-    x2 = NumericProperty((Window.width/2)+200)
+    # x2 = NumericProperty((Window.width/2)+200)
     shake_step = 5
     drop_speed = 5
 
@@ -28,30 +28,37 @@ class Block(Widget):
 
         with self.canvas:
             Color(1, 0, 0, 1)  # set the colour to red
-            self.rectA = Rectangle(pos=(self.x1, self.height),
+            self.image = Rectangle(pos=(self.x1, self.height),
                                    size=(Window.width,
                                         100))
-            Color(1, 0, 0, 1)  # set the colour to red
-            self.rectB = Rectangle(pos=(self.x2, self.height),
-                                   size=(Window.width,
-                                        100))
-        self.size = (Window.width, Window.height)
+            # Color(1, 0, 0, 1)  # set the colour to red
+            # self.rectB = Rectangle(pos=(self.x2, self.height),
+            #                        size=(Window.width,
+            #                             100))
+        self.size = (Window.width, 100)
 
     def shake(self):
-        if self.x2 > (Window.width / 2 + 600) or self.x2 < (Window.width / 2 - 300):
+        if self.x1 > Window.width/2*-1 or self.x1 < (Window.width/3*2*-1):
             self.shake_step *= -1
-            if self.shake_step > 0:
-                self.shake_step += 2
-            self.drop_speed += 1
+            # if self.shake_step > 0:
+            #     self.shake_step += 2
+            # self.drop_speed += 1
 
         self.x1 += self.shake_step
-        self.x2 += self.shake_step
+        # self.x2 += self.shake_step
 
     def move(self):
+        print('Block:')
+        print(self.pos)
+        print(self.image.pos)
+        print(self.size)
+        print(self.image.size)
+
         self.y -= self.drop_speed
         self.shake()
-        self.rectA.pos = (self.x1, self.y)
-        self.rectB.pos = (self.x2, self.y)
+        self.image.pos = (self.x1, self.y)
+        self.pos = self.image.pos
+        # self.rectB.pos = (self.x2, self.y)
 
         if self.y < -100:
             self.y = Window.height + 100
@@ -101,6 +108,7 @@ class Rocket(Widget):
     y = NumericProperty(120)
     x = NumericProperty(Window.width/2)
     force = BooleanProperty(False)
+    dead = False
 
     def __init__(self, **kwargs):
         super(Rocket, self).__init__(**kwargs)
@@ -114,22 +122,56 @@ class Rocket(Widget):
         self.pos = self.image.pos
 
     def move(self):
+        if self.dead:
+            return
+
+        print('Rocket:')
+        print(self.pos)
+        print(self.image.pos)
+        print(self.size)
+        print(self.image.size)
+
         if self.force:
-            if self.image.pos[1] < (Window.height - self.default_y - 150):
-                self.image.pos = (self.image.pos[0], self.image.pos[1] + 10)
-                self.pos = (self.image.pos[0], self.image.pos[1] + 10)
-        elif self.image.pos[1] > self.default_y:
+            # if self.image.pos[1] < (Window.height - self.default_y - 150):
+            #     self.die()
+            self.image.pos = (self.image.pos[0], self.image.pos[1] + 10)
+            self.pos = (self.image.pos[0], self.image.pos[1] + 10)
+        else:
             self.image.pos = (self.image.pos[0], self.image.pos[1] - 10)
             self.pos = (self.image.pos[0], self.image.pos[1] - 10)
-            if self.image.pos[1] < self.default_y:
-                self.image.pos = (self.image.pos[0], self.default_y)
-                self.pos = (self.image.pos[0], self.default_y)
+
+            if self.image.pos[1] < 0 or\
+                self.image.pos[1] > Window.height + self.image.size[1]:
+                self.die()
+                # self.image.pos = (self.image.pos[0], self.default_y)
+                # self.pos = (self.image.pos[0], self.default_y)
+
+    def die(self):
+        self.dead = True
+        print(dir(self.image))
+        self.image.source = None
+
+
+class StartPlace(Widget):
+    y = NumericProperty(0)
+    x = NumericProperty(0)
+
+    def __init__(self, **kwargs):
+        super(StartPlace, self).__init__(**kwargs)
+        with self.canvas:
+            self.image = Rectangle(pos=(self.x, self.y),
+                                   source=resources.rocket)
+
+    def move(self):
+        self.y -= 10
+        self.image.pos = (self.x, self.y)
 
 
 class MooseInRocketGame(Widget):
     rocket = ObjectProperty(None)
     backgroundA = ObjectProperty(None)
     backgroundB = ObjectProperty(None)
+    game_started = False
 
     def __init__(self, **kwargs):
         super(MooseInRocketGame, self).__init__(**kwargs)
@@ -142,6 +184,7 @@ class MooseInRocketGame(Widget):
         with self.canvas:
             self.backgroundA = Background(size=(768*2, 1024*2,), pos=(0, 0))
             self.backgroundB = Background(size=(768*2, 1024*2,), pos=(0, 1024*2))
+            self.start_place = StartPlace()
             self.rocket = Rocket()
 
     def _keyboard_closed(self):
@@ -149,21 +192,26 @@ class MooseInRocketGame(Widget):
         self._keyboard = None
 
     def update(self, dt):
+        if not self.game_started:
+            return
         with self.canvas:
             self.enemies_factory.generate()
 
         self.backgroundA.move()
         self.backgroundB.move()
+        self.start_place.move()
         self.rocket.move()
         for enemie in self.enemies_factory.enemies:
             enemie.move()
             if self.rocket.collide_widget(enemie):
+                self.rocket.die()
                 print('die')
             else:
                 print('~')
 
-
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if not self.game_started:
+            self.game_started = True
         self.rocket.force = True
 
     def _on_keyboard_up(self, keyboard, keycode):
