@@ -38,7 +38,7 @@ class Background(Widget):
     def move(self, speed):
         if (self.image.pos[1] * -1) >= self.resource['height']:
             self.image.pos = (self.image.pos[0],
-                              self.resource['height'])
+                              self.resource['height'] * 2)
         self.image.pos = (self.image.pos[0], self.image.pos[1] - speed)
 
 
@@ -48,24 +48,36 @@ class BackgroundHandler(object):
                                   pos=(0, 0))
         self.level1B = Background(resource=resources.background1,
                                   pos=(0, resources.background1['height']))
-
-        self.level2A = Background(resource=resources.background2,
-                                  pos=(0, 0))
-        self.level2B = Background(resource=resources.background2,
-                                  pos=(0, resources.background2['height']))
+        self.level1C = Background(resource=resources.background1,
+                                  pos=(0, resources.background1['height'] * 2))
 
         self.level3A = Background(resource=resources.background3,
                                   pos=(0, 0))
         self.level3B = Background(resource=resources.background3,
                                   pos=(0, resources.background3['height']))
+        self.level3C = Background(resource=resources.background3,
+                                  pos=(0, resources.background3['height'] * 2))
+
+        self.level2A = Background(resource=resources.background2,
+                                  pos=(0, 0))
+        self.level2B = Background(resource=resources.background2,
+                                  pos=(0, resources.background2['height']))
+        self.level2C = Background(resource=resources.background2,
+                                  pos=(0, resources.background2['height'] * 2))
 
     def move(self):
         self.level1A.move(speed=Sizer.get_screen_speed())
         self.level1B.move(speed=Sizer.get_screen_speed())
-        self.level2A.move(speed=Sizer.get_screen_speed() -2)
-        self.level2B.move(speed=Sizer.get_screen_speed() -2)
-        self.level3A.move(speed=Sizer.get_screen_speed() -4)
-        self.level3B.move(speed=Sizer.get_screen_speed() -4)
+        self.level1C.move(speed=Sizer.get_screen_speed())
+
+        #
+        self.level3A.move(speed=Sizer.get_screen_speed() -2)
+        self.level3B.move(speed=Sizer.get_screen_speed() -2)
+        self.level3C.move(speed=Sizer.get_screen_speed() -2)
+
+        self.level2A.move(speed=Sizer.get_screen_speed() -4)
+        self.level2B.move(speed=Sizer.get_screen_speed() -4)
+        self.level2C.move(speed=Sizer.get_screen_speed() -4)
 
 
 class Enemies(object):
@@ -93,8 +105,8 @@ class Enemies(object):
 
 
 class Rocket(Widget):
-    default_y = dp(120)
-    y = NumericProperty(dp(120))
+    default_y = dp(10)
+    y = NumericProperty(dp(10))
     x = NumericProperty(Window.width/2 - Sizer.get_rocket_size()[0]/2)
     force = BooleanProperty(False)
     dead = False
@@ -211,17 +223,17 @@ class MooseInRocketGame(Widget):
 class MooseInRocketApp(App):
     def build(self):
 
-        width = 768
-        height = 1024
-
-        Window.size = (width, height)
-
-        def resize(w, h):
-            if w == width and h == height:
-                return
-            Window.size = (width, height)
-
-        Window.on_resize = resize
+        # width = 768
+        # height = 1024
+        #
+        # Window.size = (width, height)
+        #
+        # def resize(w, h):
+        #     if w == width and h == height:
+        #         return
+        #     Window.size = (width, height)
+        #
+        # Window.on_resize = resize
 
         game = MooseInRocketGame()
 

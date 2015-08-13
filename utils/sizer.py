@@ -44,4 +44,4 @@ class Sizer(object):
 
     @classmethod
     def get_rocket_speed(cls):
-        return int(Window.height / dp(300))
+        return dp(5)
