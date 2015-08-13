@@ -11,16 +11,20 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import AsyncImage, Image
 from kivy.config import Config
+from  kivy.graphics.context_instructions import Rotate
+from kivy.graphics.transformation import Matrix
+
+import random
 
 import resources
 
 
 class Block(Widget):
+    x = NumericProperty(0)
     y = NumericProperty(Window.height)
-    x1 = NumericProperty((Window.width/2)*-1 - 200)
-    # x2 = NumericProperty((Window.width/2)+200)
-    shake_step = 5
+
     drop_speed = 5
+    active = True
 
     def __init__(self, **kwargs):
         super(Block, self).__init__(**kwargs)
@@ -28,40 +32,51 @@ class Block(Widget):
 
         with self.canvas:
             Color(1, 0, 0, 1)  # set the colour to red
-            self.image = Rectangle(pos=(self.x1, self.height),
-                                   size=(Window.width,
-                                        100))
-            # Color(1, 0, 0, 1)  # set the colour to red
-            # self.rectB = Rectangle(pos=(self.x2, self.height),
-            #                        size=(Window.width,
-            #                             100))
-        self.size = (Window.width, 100)
+            self.image = Image(
+                source=resources.asteroid['sprite'],
+                pos=(self.x, self.height))
+        self.image.size = self.image.texture.size
+        self.size = self.image.size
 
-    def shake(self):
-        if self.x1 > Window.width/2*-1 or self.x1 < (Window.width/3*2*-1):
-            self.shake_step *= -1
-            # if self.shake_step > 0:
-            #     self.shake_step += 2
-            # self.drop_speed += 1
-
-        self.x1 += self.shake_step
-        # self.x2 += self.shake_step
+    @classmethod
+    def build(cls):
+        return cls()
 
     def move(self):
-        print('Block:')
-        print(self.pos)
-        print(self.image.pos)
-        print(self.size)
-        print(self.image.size)
-
-        self.y -= self.drop_speed
-        self.shake()
-        self.image.pos = (self.x1, self.y)
+        if self.active:
+            self.y -= self.drop_speed
+            self._move()
+        self.image.pos = (self.x, self.y)
         self.pos = self.image.pos
-        # self.rectB.pos = (self.x2, self.y)
 
-        if self.y < -100:
-            self.y = Window.height + 100
+    def _move(self):
+        raise Exception('Implement _move')
+
+    def _fix_collider(self):
+        raise Exception('Implement _fix_collider')
+
+
+class ShakeBlock(Block):
+    shake_step = 5
+
+    def _move(self):
+        if self.x > Window.width / 2 - self.size[0] / 2 or\
+           self.x < self.size[0] / 2 * -1:
+            self.shake_step *= -1
+        self.x += self.shake_step
+
+        if self.y < self.image.size[1] * -1:
+            self.active = False
+
+
+class CrossBlock(Block):
+    shake_step = 5
+
+    def _move(self):
+        self.x += self.shake_step
+
+        if self.y < self.image.size[1] * -1 or self.x >= Window.height:
+            self.active = False
 
 
 class Background(Widget):
@@ -70,21 +85,49 @@ class Background(Widget):
 
     def __init__(self, **kwargs):
         super(Background, self).__init__(**kwargs)
-        self._requested_size = kwargs['size']
-
+        self.resource = kwargs['resource']
         with self.canvas:
             self.image = Rectangle(pos=kwargs['pos'],
-                                   size=kwargs['size'],
-                                   source=resources.background)
+                                   size=(self.resource['width'],
+                                         self.resource['height']),
+                                   source=self.resource['sprite'])
+
+    def move(self, speed):
+        if (self.image.pos[1] * -1) >= self.resource['height']:
+            self.image.pos = (self.image.pos[0],
+                              self.resource['height'])
+        self.image.pos = (self.image.pos[0], self.image.pos[1] - speed)
+
+
+class BackgroundHandler(object):
+    def __init__(self):
+        self.level1A = Background(resource=resources.background1,
+                                  pos=(0, 0))
+        self.level1B = Background(resource=resources.background1,
+                                  pos=(0, resources.background1['height']))
+
+        self.level2A = Background(resource=resources.background2,
+                                  pos=(0, 0))
+        self.level2B = Background(resource=resources.background2,
+                                  pos=(0, resources.background2['height']))
+
+        self.level3A = Background(resource=resources.background3,
+                                  pos=(0, 0))
+        self.level3B = Background(resource=resources.background3,
+                                  pos=(0, resources.background3['height']))
 
     def move(self):
-        if (self.image.pos[1] * -1) >= self._requested_size[1]:
-            self.image.pos = (self.image.pos[0], 1024*2)
-        self.image.pos = (self.image.pos[0], self.image.pos[1] - 8)
+        self.level1A.move(speed=10)
+        self.level1B.move(speed=10)
+        self.level2A.move(speed=7)
+        self.level2B.move(speed=7)
+        self.level3A.move(speed=5)
+        self.level3B.move(speed=5)
 
 
 class Enemies(object):
     _enemies = []
+    enemies_classes = [ShakeBlock, CrossBlock]
 
     @property
     def enemies(self):
@@ -96,9 +139,12 @@ class Enemies(object):
             self._enemies.append(value)
 
     def generate(self):
-        if self.enemies:
-            return None
-        block = Block()
+        for enemie in self.enemies:
+            if enemie.active:
+                return
+
+        enemie_cls = random.choice(self.enemies_classes)
+        block = enemie_cls()
         self.enemies = block
         return block
 
@@ -115,14 +161,23 @@ class Rocket(Widget):
         self.x = Window.width/2 - self.size[0]/2
 
         with self.canvas:
-            self.image = Rectangle(pos=(self.x, self.y),
-                                   source=resources.rocket,)
-            self.image.size = self.image.texture.size
+            self.image = Image(pos=(self.x, self.y),
+                               source=resources.rocket['sprite2'],)
+            self.image.size = (resources.rocket['width'],
+                               resources.rocket['height'])
         self.size = self.image.size
         self.pos = self.image.pos
 
+        self.matrix = Matrix()
+
     def move(self):
         if self.dead:
+            if self.image.pos[0] > resources.rocket['width'] * -1 and\
+                    self.image.pos[1] > resources.rocket['height'] * -1:
+                self.image.pos = (self.image.pos[0] - 20,
+                                  self.image.pos[1] - 20)
+                self.image.size = (self.image.size[0] - 25,
+                                   self.image.size[1] - 10)
             return
 
         print('Rocket:')
@@ -132,11 +187,16 @@ class Rocket(Widget):
         print(self.image.size)
 
         if self.force:
+            self.image.source = resources.rocket['sprite1']
+            self.image.reload()
             # if self.image.pos[1] < (Window.height - self.default_y - 150):
             #     self.die()
             self.image.pos = (self.image.pos[0], self.image.pos[1] + 10)
             self.pos = (self.image.pos[0], self.image.pos[1] + 10)
         else:
+            self.image.source = resources.rocket['sprite2']
+            self.image.reload()
+
             self.image.pos = (self.image.pos[0], self.image.pos[1] - 10)
             self.pos = (self.image.pos[0], self.image.pos[1] - 10)
 
@@ -148,8 +208,6 @@ class Rocket(Widget):
 
     def die(self):
         self.dead = True
-        print(dir(self.image))
-        self.image.source = None
 
 
 class StartPlace(Widget):
@@ -160,7 +218,9 @@ class StartPlace(Widget):
         super(StartPlace, self).__init__(**kwargs)
         with self.canvas:
             self.image = Rectangle(pos=(self.x, self.y),
-                                   source=resources.rocket)
+                                   source=resources.basement['sprite'],
+                                   size=(resources.basement['width'],
+                                         resources.basement['height']))
 
     def move(self):
         self.y -= 10
@@ -169,8 +229,7 @@ class StartPlace(Widget):
 
 class MooseInRocketGame(Widget):
     rocket = ObjectProperty(None)
-    backgroundA = ObjectProperty(None)
-    backgroundB = ObjectProperty(None)
+    background_handler = ObjectProperty(None)
     game_started = False
 
     def __init__(self, **kwargs):
@@ -182,8 +241,7 @@ class MooseInRocketGame(Widget):
         # self.rocket = Rocket()
         self.enemies_factory = Enemies()
         with self.canvas:
-            self.backgroundA = Background(size=(768*2, 1024*2,), pos=(0, 0))
-            self.backgroundB = Background(size=(768*2, 1024*2,), pos=(0, 1024*2))
+            self.background_handler = BackgroundHandler()
             self.start_place = StartPlace()
             self.rocket = Rocket()
 
@@ -197,8 +255,7 @@ class MooseInRocketGame(Widget):
         with self.canvas:
             self.enemies_factory.generate()
 
-        self.backgroundA.move()
-        self.backgroundB.move()
+        self.background_handler.move()
         self.start_place.move()
         self.rocket.move()
         for enemie in self.enemies_factory.enemies:
