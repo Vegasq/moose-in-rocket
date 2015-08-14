@@ -1,13 +1,13 @@
-from kivy.metrics import  dp, sp
+from kivy.metrics import dp, sp
 
 rocket = {
     'sprite1': "rocket_1.png",
     'sprite2': "rocket_2.png",
-    'width': dp(152),
-    'height': dp(261)
+    'width': dp(80),
+    'height': dp(135)
 }
 
-background1 = {
+background3 = {
     'sprite': "background_3.png",
     'width': dp(1024),
     'height': dp(768)
@@ -17,7 +17,7 @@ background2 = {
     'width': dp(1085),
     'height': dp(1153)
 }
-background3 = {
+background1 = {
     'sprite': "background_1.png",
     'width': dp(1018),
     'height': dp(1493)

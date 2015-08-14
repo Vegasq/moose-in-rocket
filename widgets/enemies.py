@@ -2,6 +2,8 @@ from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty
 from kivy.core.window import Window
 from kivy.uix.image import Image
+from kivy.graphics import Color, Rectangle
+
 
 from utils.sizer import Sizer
 import resources
@@ -20,11 +22,15 @@ class Block(Widget):
         super(Block, self).__init__(**kwargs)
 
         with self.canvas:
+            # Color(1,0,0)
+            # self.rect = Rectangle(
+            #     pos=(self.x, self.y),
+            #     size = Sizer.get_asteroid_size())
             self.image = Image(
                 source=resources.asteroid['sprite'],
                 pos=(self.x, self.y),
                 size = Sizer.get_asteroid_size())
-        self.size = self.image.size
+        self.size = Sizer.get_asteroid_size()
 
     @classmethod
     def build(cls):
@@ -35,6 +41,7 @@ class Block(Widget):
             self.y -= self.drop_speed
             self._move()
         self.image.pos = (self.x, self.y)
+        # self.rect.pos = (self.x, self.y)
         self.pos = self.image.pos
 
     def _move(self):

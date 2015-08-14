@@ -24,9 +24,9 @@ class Sizer(object):
 
     @classmethod
     def get_rocket_size(cls):
-        return resources.rocket['width'], resources.rocket['height']
+        return (resources.rocket['width'], resources.rocket['height'])
         return cls._calc(
-            10.0, resources.rocket['width'], resources.rocket['height'])
+            6.0, resources.rocket['width'], resources.rocket['height'])
 
     @classmethod
     def get_asteroid_size(cls):
