@@ -14,8 +14,9 @@ __author__ = 'vegasq'
 class Block(Widget):
     x = NumericProperty(0)
     y = NumericProperty(Window.height + Sizer.get_asteroid_size()[1])
+    sprite = resources.asteroid['sprite']
 
-    drop_speed = 5
+    drop_speed = 10
     active = True
 
     def __init__(self, **kwargs):
@@ -27,10 +28,15 @@ class Block(Widget):
             #     pos=(self.x, self.y),
             #     size = Sizer.get_asteroid_size())
             self.image = Image(
-                source=resources.asteroid['sprite'],
+                source=self.sprite,
                 pos=(self.x, self.y),
                 size = Sizer.get_asteroid_size())
         self.size = Sizer.get_asteroid_size()
+
+    def reset(self):
+        self.active = False
+        self.image.pos = (Window.width * -1, Window.heightr * -1)
+        self.pos = self.image.pos
 
     @classmethod
     def build(cls):
@@ -52,7 +58,8 @@ class Block(Widget):
 
 
 class ShakeBlock(Block):
-    shake_step = 5
+    shake_step = 15
+    sprite = resources.asteroid['sprite']
 
     def _move(self):
         if self.x > Window.width / 2 - self.size[0] / 2 or\
@@ -65,7 +72,20 @@ class ShakeBlock(Block):
 
 
 class CrossBlock(Block):
-    shake_step = 5
+    shake_step = 15
+    sprite = resources.asteroid['sprite']
+
+    def _move(self):
+        self.x += self.shake_step
+
+        if self.y < self.image.size[1] * -1 or\
+            self.x >= Window.width + self.image.size[0]:
+            self.active = False
+
+
+class CrossRoundBlock(Block):
+    sprite = resources.asteroid_round['sprite']
+    shake_step = 10
 
     def _move(self):
         self.x += self.shake_step

@@ -40,7 +40,7 @@ class Sizer(object):
 
     @classmethod
     def get_screen_speed(cls):
-        return int(Window.height / dp(150))
+        return dp(15)
 
     @classmethod
     def get_rocket_speed(cls):

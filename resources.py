@@ -35,6 +35,12 @@ asteroid = {
     'height': dp(166)
 }
 
+asteroid_round = {
+    'sprite': 'asteroid_2.png',
+    'width': dp(150),
+    'height': dp(155)
+}
+
 ruby = {
     'sprite': 'crystal_1.png'
 }

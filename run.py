@@ -18,7 +18,7 @@ from kivy.metrics import  dp, sp
 import random
 
 import resources
-from widgets.enemies import ShakeBlock, CrossBlock
+from widgets.enemies import ShakeBlock, CrossBlock, CrossRoundBlock
 from widgets.ruby import Ruby
 from widgets.score import Score
 from utils.sizer import Sizer
@@ -87,7 +87,7 @@ class BackgroundHandler(object):
 
 class Enemies(object):
     _enemies = []
-    enemies_classes = [ShakeBlock, CrossBlock]
+    enemies_classes = [ShakeBlock, CrossBlock, CrossRoundBlock]
 
     @property
     def enemies(self):
@@ -107,6 +107,10 @@ class Enemies(object):
         block = enemie_cls()
         self.enemies = block
         return block
+
+    def reset(self):
+        for enemie in self.enemies:
+            enemie.reset()
 
 
 class Rocket(Widget):
@@ -190,7 +194,7 @@ class StartPlace(Widget):
                                          resources.basement['height']))
 
     def move(self):
-        self.y -= Sizer.get_screen_speed()
+        self.y -= Sizer.get_screen_speed() / 2
         self.image.pos = (self.x, self.y)
 
     def restart(self):
