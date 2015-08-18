@@ -249,6 +249,8 @@ class MooseInRocketGame(Widget):
                 self.rocket.die()
                 self.restart()
                 return
+        if self.rocket.dead:
+            self.restart()
 
     def restart(self):
         if self.game_started:

@@ -12,7 +12,8 @@ __author__ = 'vegasq'
 
 
 class Collide(Widget):
-    debug = True
+    debug = False
+
     def __init__(self, **kwargs):
         super(Collide, self).__init__(**kwargs)
         self.remove_width = dp(280)
@@ -87,8 +88,11 @@ class ShakeBlock(Block):
     sprite = resources.asteroid
 
     def _move(self):
-        if self.x > self.image.size[0] or self.x < self.image.size[0] * -1:
+        # if self.x > self.image.size[0] or self.x < self.image.size[0] * -1:
+        #     self.shake_step *= -1
+        if self.x > Window.width or self.x < 0:
             self.shake_step *= -1
+
         self.x += self.shake_step
 
         if self.y < self.image.size[1] * -1:
@@ -118,5 +122,8 @@ class CrossRoundBlock(Block):
     def _move(self):
         self.x += self.shake_step
 
-        if self.x >= Window.height + self.image.size[0]:
+        if self.x >= Window.height:
+            self.shake_step *= -1
+
+        if self.y < self.image.size[1] * -2:
             self.active = False
