@@ -3,7 +3,7 @@ from kivy.properties import NumericProperty
 from kivy.core.window import Window
 from kivy.uix.image import Image
 from kivy.graphics import Color, Rectangle
-
+from kivy.metrics import  dp, sp
 
 from utils.sizer import Sizer
 import resources
@@ -11,31 +11,56 @@ import resources
 __author__ = 'vegasq'
 
 
+class Collide(Widget):
+    debug = False
+
+    def __init__(self, **kwargs):
+        super(Collide, self).__init__(**kwargs)
+        self.remove_width = dp(280)
+        self.remove_height = dp(120)
+        if self.debug:
+            with self.canvas:
+                Color(1, 0, 0)
+                self.rect = Rectangle()
+
+    def setup(self, remove_width=10, remove_height=10):
+        self.remove_width = dp(remove_width)
+        self.remove_height = dp(remove_height)
+
+    def follow(self, obj):
+        self.size = (obj.size[0] - self.remove_width,
+                     obj.size[1] - self.remove_height)
+
+        self.pos = (obj.pos[0] + self.remove_width/2,
+                    obj.pos[1] + self.remove_height/2)
+        if self.debug:
+            self.rect.size = self.size
+            self.rect.pos = self.pos
+
+
 class Block(Widget):
     x = NumericProperty(0)
-    y = NumericProperty(Window.height + Sizer.get_asteroid_size()[1])
-    sprite = resources.asteroid['sprite']
+    y = NumericProperty(Window.height)
 
     drop_speed = 10
     active = True
+
+    collide = None
 
     def __init__(self, **kwargs):
         super(Block, self).__init__(**kwargs)
 
         with self.canvas:
-            # Color(1,0,0)
-            # self.rect = Rectangle(
-            #     pos=(self.x, self.y),
-            #     size = Sizer.get_asteroid_size())
             self.image = Image(
-                source=self.sprite,
+                source=self.sprite['sprite'],
                 pos=(self.x, self.y),
-                size = Sizer.get_asteroid_size())
-        self.size = Sizer.get_asteroid_size()
+                size=(self.sprite['width'],
+                      self.sprite['height']))
+        self.collide = Collide()
 
     def reset(self):
         self.active = False
-        self.image.pos = (Window.width * -1, Window.heightr * -1)
+        self.image.pos = (Window.width * -1, Window.height * -1)
         self.pos = self.image.pos
 
     @classmethod
@@ -49,6 +74,7 @@ class Block(Widget):
         self.image.pos = (self.x, self.y)
         # self.rect.pos = (self.x, self.y)
         self.pos = self.image.pos
+        self.collide.follow(self.image)
 
     def _move(self):
         raise Exception('Implement _move')
@@ -59,12 +85,14 @@ class Block(Widget):
 
 class ShakeBlock(Block):
     shake_step = 15
-    sprite = resources.asteroid['sprite']
+    sprite = resources.asteroid
 
     def _move(self):
-        if self.x > Window.width / 2 - self.size[0] / 2 or\
-           self.x < self.size[0] / 2 * -1:
+        # if self.x > self.image.size[0] or self.x < self.image.size[0] * -1:
+        #     self.shake_step *= -1
+        if self.x > Window.width or self.x < 0:
             self.shake_step *= -1
+
         self.x += self.shake_step
 
         if self.y < self.image.size[1] * -1:
@@ -73,7 +101,7 @@ class ShakeBlock(Block):
 
 class CrossBlock(Block):
     shake_step = 15
-    sprite = resources.asteroid['sprite']
+    sprite = resources.asteroid
 
     def _move(self):
         self.x += self.shake_step
@@ -84,11 +112,18 @@ class CrossBlock(Block):
 
 
 class CrossRoundBlock(Block):
-    sprite = resources.asteroid_round['sprite']
+    sprite = resources.asteroid_round
     shake_step = 10
+
+    def __init__(self, **kwargs):
+        super(CrossRoundBlock, self).__init__(**kwargs)
+        self.collide.setup(90, 90)
 
     def _move(self):
         self.x += self.shake_step
 
-        if self.y < self.image.size[1] * -1 or self.x >= Window.height:
+        if self.x >= Window.height:
+            self.shake_step *= -1
+
+        if self.y < self.image.size[1] * -2:
             self.active = False
