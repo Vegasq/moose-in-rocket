@@ -34,3 +34,13 @@ asteroid = {
     'width': dp(551),
     'height': dp(166)
 }
+
+ruby = {
+    'sprite': 'crystal_1.png'
+}
+
+score = {
+    'sprite': 'counter_1.png',
+    'width': dp(100),
+    'height': dp(70)
+}

@@ -19,6 +19,8 @@ import random
 
 import resources
 from widgets.enemies import ShakeBlock, CrossBlock
+from widgets.ruby import Ruby
+from widgets.score import Score
 from utils.sizer import Sizer
 
 
@@ -78,6 +80,9 @@ class BackgroundHandler(object):
         self.level2A.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
         self.level2B.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
         self.level2C.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
+
+    def restart(self):
+        pass
 
 
 class Enemies(object):
@@ -162,6 +167,15 @@ class Rocket(Widget):
     def die(self):
         self.dead = True
 
+    def restart(self):
+        self.dead = False
+        self.default_y = dp(10)
+        self.y = dp(10)
+        self.x = Window.width/2 - Sizer.get_rocket_size()[0]/2
+        self.force = False
+        self.pos = (self.x, self.y)
+        self.image.pos = (self.x, self.y)
+
 
 class StartPlace(Widget):
     y = NumericProperty(0)
@@ -177,6 +191,11 @@ class StartPlace(Widget):
 
     def move(self):
         self.y -= Sizer.get_screen_speed()
+        self.image.pos = (self.x, self.y)
+
+    def restart(self):
+        self.y = 0
+        self.x = 0
         self.image.pos = (self.x, self.y)
 
 
@@ -198,6 +217,8 @@ class MooseInRocketGame(Widget):
             self.background_handler = BackgroundHandler()
             self.start_place = StartPlace()
             self.rocket = Rocket()
+            self.ruby = Ruby()
+            self.score = Score()
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -212,10 +233,23 @@ class MooseInRocketGame(Widget):
         self.background_handler.move()
         self.start_place.move()
         self.rocket.move()
+        if self.ruby:
+            self.ruby.move()
+            if self.rocket.collide_widget(self.ruby):
+                self.score.up()
+                self.ruby.hide()
         for enemie in self.enemies_factory.enemies:
             enemie.move()
             if self.rocket.collide_widget(enemie):
                 self.rocket.die()
+                self.restart()
+                return
+
+    def restart(self):
+        if self.game_started:
+            self.start_place.restart()
+            self.rocket.restart()
+            self.game_started = False
 
     def on_touch_down(self, *args, **kwargs):
         self._on_keyboard_down(1,2,3,4)
