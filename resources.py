@@ -10,7 +10,7 @@ rocket = {
 background3 = {
     'sprite': "resources/background_3.png",
     'width': dp(1024),
-    'height': dp(768)
+    'height': dp(3000)
 }
 background2 = {
     'sprite': "resources/background_2.png",
