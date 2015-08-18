@@ -87,7 +87,11 @@ class BackgroundHandler(object):
 
 class Enemies(object):
     _enemies = []
-    enemies_classes = [ShakeBlock, CrossBlock, CrossRoundBlock]
+    enemies_classes = [
+        ShakeBlock,
+        CrossBlock,
+        CrossRoundBlock
+    ]
 
     @property
     def enemies(self):
@@ -134,9 +138,6 @@ class Rocket(Widget):
             self.image = Image(source=resources.rocket['sprite2'],
                                pos=(self.x, self.y),
                                size=size)
-
-        self.size = size
-        self.pos = (self.x, self.y)
 
     def move(self):
         if self.dead:
@@ -239,12 +240,12 @@ class MooseInRocketGame(Widget):
         self.rocket.move()
         if self.ruby:
             self.ruby.move()
-            if self.rocket.collide_widget(self.ruby):
+            if self.rocket.image.collide_widget(self.ruby):
                 self.score.up()
                 self.ruby.hide()
         for enemie in self.enemies_factory.enemies:
             enemie.move()
-            if self.rocket.collide_widget(enemie):
+            if self.rocket.image.collide_widget(enemie.collide):
                 self.rocket.die()
                 self.restart()
                 return
@@ -253,6 +254,7 @@ class MooseInRocketGame(Widget):
         if self.game_started:
             self.start_place.restart()
             self.rocket.restart()
+            self.enemies_factory.reset()
             self.game_started = False
 
     def on_touch_down(self, *args, **kwargs):

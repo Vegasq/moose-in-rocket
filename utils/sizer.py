@@ -30,6 +30,7 @@ class Sizer(object):
 
     @classmethod
     def get_asteroid_size(cls):
+        return (resources.asteroid['width'], resources.asteroid['height'])
         return cls._calc(
             10.0, resources.asteroid['width'], resources.asteroid['height'])
 
