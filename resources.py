@@ -7,15 +7,20 @@ rocket = {
     'height': dp(135)
 }
 
-background3 = {
-    'sprite': "resources/background_3.png",
+background4 = {
+    'sprite': "resources/background_4.png",
     'width': dp(1024),
     'height': dp(3000)
 }
+background3 = {
+    'sprite': "resources/background_3.png",
+    'width': dp(1085),
+    'height': dp(1154)
+}
 background2 = {
     'sprite': "resources/background_2.png",
-    'width': dp(1085),
-    'height': dp(1153)
+    'width': dp(1024),
+    'height': dp(3000)
 }
 background1 = {
     'sprite': "resources/background_1.png",
@@ -49,4 +54,16 @@ score = {
     'sprite': 'resources/counter_1.png',
     'width': dp(100),
     'height': dp(70)
+}
+
+start_screen = {
+    'sprite': 'resources/Start_screen.png',
+    'width': dp(974),
+    'height': dp(860)
+}
+
+score_screen = {
+    'sprite': 'resources/Restart_screen.png',
+    'width': dp(986),
+    'height': dp(860)
 }

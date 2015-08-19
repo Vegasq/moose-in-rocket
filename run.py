@@ -21,6 +21,7 @@ import resources
 from widgets.enemies import ShakeBlock, CrossBlock, CrossRoundBlock
 from widgets.ruby import Ruby
 from widgets.score import Score
+from widgets.start_screen import StartScreen, ScoreScreen
 from utils.sizer import Sizer
 
 
@@ -46,19 +47,17 @@ class Background(Widget):
 
 class BackgroundHandler(object):
     def __init__(self):
+        self.level4A = Background(resource=resources.background4,
+                                  pos=(0, 0))
+        self.level4B = Background(resource=resources.background4,
+                                  pos=(0, resources.background4['height']))
+
         self.level3A = Background(resource=resources.background3,
                                   pos=(0, 0))
         self.level3B = Background(resource=resources.background3,
                                   pos=(0, resources.background3['height']))
         # self.level1C = Background(resource=resources.background1,
         #                           pos=(0, resources.background1['height'] * 2))
-
-        self.level1A = Background(resource=resources.background1,
-                                  pos=(0, 0))
-        self.level1B = Background(resource=resources.background1,
-                                  pos=(0, resources.background1['height']))
-        self.level1C = Background(resource=resources.background1,
-                                  pos=(0, resources.background1['height'] * 2))
 
         self.level2A = Background(resource=resources.background2,
                                   pos=(0, 0))
@@ -67,19 +66,27 @@ class BackgroundHandler(object):
         self.level2C = Background(resource=resources.background2,
                                   pos=(0, resources.background2['height'] * 2))
 
+        self.level1A = Background(resource=resources.background1,
+                                  pos=(0, 0))
+        self.level1B = Background(resource=resources.background1,
+                                  pos=(0, resources.background1['height']))
+        self.level1C = Background(resource=resources.background1,
+                                  pos=(0, resources.background1['height'] * 2))
+
     def move(self):
-        self.level3A.move(speed=Sizer.get_screen_speed(), total_slides=2)
-        self.level3B.move(speed=Sizer.get_screen_speed(), total_slides=2)
-        # self.level1C.move(speed=Sizer.get_screen_speed())
+        self.level4A.move(speed=Sizer.get_screen_speed(), total_slides=2)
+        self.level4B.move(speed=Sizer.get_screen_speed(), total_slides=2)
 
-        #
-        self.level1A.move(speed=Sizer.get_screen_speed() -2, total_slides=3)
-        self.level1B.move(speed=Sizer.get_screen_speed() -2, total_slides=3)
-        self.level1C.move(speed=Sizer.get_screen_speed() -2, total_slides=3)
+        self.level3A.move(speed=Sizer.get_screen_speed() -1, total_slides=2)
+        self.level3B.move(speed=Sizer.get_screen_speed() -1, total_slides=2)
 
-        self.level2A.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
-        self.level2B.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
-        self.level2C.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
+        self.level2A.move(speed=Sizer.get_screen_speed() -2, total_slides=3)
+        self.level2B.move(speed=Sizer.get_screen_speed() -2, total_slides=3)
+        self.level2C.move(speed=Sizer.get_screen_speed() -2, total_slides=3)
+
+        self.level1A.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
+        self.level1B.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
+        self.level1C.move(speed=Sizer.get_screen_speed() -4, total_slides=3)
 
     def restart(self):
         pass
@@ -130,11 +137,6 @@ class Rocket(Widget):
         size = (resources.rocket['width'], resources.rocket['height'])
 
         with self.canvas:
-            # Color(1,0,0)
-            # self.rect = Rectangle(
-            #     pos=(self.x, self.y),
-            #     size=size)
-
             self.image = Image(source=resources.rocket['sprite2'],
                                pos=(self.x, self.y),
                                size=size)
@@ -180,6 +182,7 @@ class Rocket(Widget):
         self.force = False
         self.pos = (self.x, self.y)
         self.image.pos = (self.x, self.y)
+        self.image.size = (resources.rocket['width'], resources.rocket['height'])
 
 
 class StartPlace(Widget):
@@ -224,6 +227,8 @@ class MooseInRocketGame(Widget):
             self.rocket = Rocket()
             self.ruby = Ruby()
             self.score = Score()
+            self.start_screen = StartScreen()
+            self.score_screen = ScoreScreen()
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -232,6 +237,7 @@ class MooseInRocketGame(Widget):
     def update(self, dt):
         if not self.game_started:
             return
+
         with self.canvas:
             self.enemies_factory.generate()
 
@@ -247,10 +253,9 @@ class MooseInRocketGame(Widget):
             enemie.move()
             if self.rocket.image.collide_widget(enemie.collide):
                 self.rocket.die()
-                self.restart()
                 return
         if self.rocket.dead:
-            self.restart()
+            self.score_screen.show()
 
     def restart(self):
         if self.game_started:
@@ -266,6 +271,15 @@ class MooseInRocketGame(Widget):
         self._on_keyboard_up(1,2)
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        if self.start_screen.is_active():
+            self.start_screen.hide()
+            return
+
+        if self.score_screen.is_active():
+            self.restart()
+            self.score_screen.hide()
+            return
+
         if not self.game_started:
             self.game_started = True
         self.rocket.force = True
