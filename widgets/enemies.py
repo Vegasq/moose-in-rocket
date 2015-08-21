@@ -42,10 +42,14 @@ class Block(Widget):
     x = NumericProperty(0)
     y = NumericProperty(Window.height)
 
-    drop_speed = 10
+    drop_speed = dp(4)
     active = True
 
     collide = None
+
+    @classmethod
+    def reset_speed(cls):
+        cls.drop_speed = dp(4)
 
     def __init__(self, **kwargs):
         super(Block, self).__init__(**kwargs)
@@ -76,6 +80,12 @@ class Block(Widget):
         self.pos = self.image.pos
         self.collide.follow(self.image)
 
+    def hide(self):
+        if self.active:
+            Block.drop_speed += dp(1)
+            self.image.pos = (Window.width * -1, Window.height * -1)
+
+
     def _move(self):
         raise Exception('Implement _move')
 
@@ -96,6 +106,7 @@ class ShakeBlock(Block):
         self.x += self.shake_step
 
         if self.y < self.image.size[1] * -1:
+            self.hide()
             self.active = False
 
 
@@ -108,12 +119,13 @@ class CrossBlock(Block):
 
         if self.y < self.image.size[1] * -1 or\
             self.x >= Window.width + self.image.size[0]:
+            self.hide()
             self.active = False
 
 
 class CrossRoundBlock(Block):
     sprite = resources.asteroid_round
-    shake_step = 10
+    shake_step = 15
 
     def __init__(self, **kwargs):
         super(CrossRoundBlock, self).__init__(**kwargs)
@@ -126,4 +138,5 @@ class CrossRoundBlock(Block):
             self.shake_step *= -1
 
         if self.y < self.image.size[1] * -2:
+            self.hide()
             self.active = False

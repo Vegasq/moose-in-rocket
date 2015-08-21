@@ -18,7 +18,7 @@ from kivy.metrics import  dp, sp
 import random
 
 import resources
-from widgets.enemies import ShakeBlock, CrossBlock, CrossRoundBlock
+from widgets.enemies import ShakeBlock, CrossBlock, CrossRoundBlock, Block
 from widgets.ruby import Ruby
 from widgets.score import Score
 from widgets.start_screen import StartScreen, ScoreScreen
@@ -185,6 +185,8 @@ class Rocket(Widget):
         self.image.size = (resources.rocket['width'], resources.rocket['height'])
         self.image.source = resources.rocket['sprite2']
         self.image.reload()
+        Block.reset_speed()
+
 
 class StartPlace(Widget):
     y = NumericProperty(0)
@@ -250,12 +252,18 @@ class MooseInRocketGame(Widget):
             if self.rocket.image.collide_widget(self.ruby):
                 self.score.up()
                 self.ruby.hide()
-        for enemie in self.enemies_factory.enemies:
-            enemie.move()
-            if self.rocket.image.collide_widget(enemie.collide):
-                self.rocket.die()
-                return
+
+        if not self.rocket.dead:
+            for enemie in self.enemies_factory.enemies:
+                enemie.move()
+                if self.rocket.image.collide_widget(enemie.collide):
+                    self.rocket.die()
+                    return
+
         if self.rocket.dead:
+            for enemie in self.enemies_factory.enemies:
+                enemie.hide()
+
             self.score_screen.show()
 
     def restart(self):
