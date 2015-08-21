@@ -183,7 +183,8 @@ class Rocket(Widget):
         self.pos = (self.x, self.y)
         self.image.pos = (self.x, self.y)
         self.image.size = (resources.rocket['width'], resources.rocket['height'])
-
+        self.image.source = resources.rocket['sprite2']
+        self.image.reload()
 
 class StartPlace(Widget):
     y = NumericProperty(0)
