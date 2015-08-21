@@ -166,7 +166,7 @@ class Rocket(Widget):
             self.pos = (self.image.pos[0], self.image.pos[1] - Sizer.get_rocket_speed())
 
             if (
-                self.image.pos[1] < 0 or
+                self.image.pos[1] < (self.image.size[1] / 2) * -1 or
                 self.image.pos[1] > Window.height + self.image.size[1]
             ):
                 self.die()
