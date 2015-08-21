@@ -216,9 +216,9 @@ class MooseInRocketGame(Widget):
     def __init__(self, **kwargs):
         super(MooseInRocketGame, self).__init__(**kwargs)
 
-        # self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
-        # self._keyboard.bind(on_key_down=self._on_keyboard_down)
-        # self._keyboard.bind(on_key_up=self._on_keyboard_up)
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self._keyboard.bind(on_key_up=self._on_keyboard_up)
 
         # self.rocket = Rocket()
         self.enemies_factory = Enemies()
