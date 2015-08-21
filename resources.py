@@ -3,8 +3,8 @@ from kivy.metrics import dp, sp
 rocket = {
     'sprite1': "resources/rocket_1.png",
     'sprite2': "resources/rocket_2.png",
-    'width': dp(80),
-    'height': dp(135)
+    'width': dp(153),
+    'height': dp(262)
 }
 
 background4 = {
@@ -47,7 +47,9 @@ asteroid_round = {
 }
 
 ruby = {
-    'sprite': 'resources/crystal_1.png'
+    'sprite': 'resources/crystal_1.png',
+    'width': dp(153),
+    'height': dp(201)
 }
 
 score = {
